@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoidScript — Code from the void.</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #120914;
+    --void2: #1a0f23;
+    --void3: #241535;
+    --glow: #ff5ccf;
+    --glow2: #a855f7;
+    --glow-dim: rgba(255,92,207,0.12);
+    --glow-dim2: rgba(255,92,207,0.05);
+    --text: #f7eefe;
+    --text-dim: #c6a7d8;
+    --accent: #ffb0eb;
+    --red: #ff7aa8;
+    --blue: #8b7cff;
+    --yellow: #ffb3d9;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--void);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed;
+    width: 12px; height: 12px;
+    background: var(--glow);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease, opacity 0.2s;
+    mix-blend-mode: screen;
+  }
+  .cursor-trail {
+    position: fixed;
+    width: 32px; height: 32px;
+    border: 1px solid var(--glow);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transition: left 0.12s ease, top 0.12s ease, transform 0.2s;
+    opacity: 0.4;
+  }
+
+  /* Noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  /* Scanlines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 4rem;
+    background: linear-gradient(to bottom, rgba(18,9,20,0.95), transparent);
+    backdrop-filter: blur(8px);
+  }
+
+  .nav-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--glow);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+  }
+  .nav-logo span { color: var(--text-dim); }
+
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--glow); }
+
+  .nav-cta {
+    background: var(--glow-dim);
+    border: 1px solid var(--glow);
+    color: var(--glow) !important;
+    padding: 0.5rem 1.2rem;
+    border-radius: 4px;
+    transition: background 0.2s, box-shadow 0.2s !important;
+  }
+  .nav-cta:hover {
+    background: rgba(255,92,207,0.2) !important;
+    box-shadow: 0 0 20px rgba(255,92,207,0.3);
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 8rem 2rem 4rem;
+    overflow: hidden;
+  }
+
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,92,207,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168,85,247,0.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 100%);
+  }
+
+  .hero-orb {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(168,85,247,0.18) 0%, rgba(255,92,207,0.08) 35%, transparent 70%);
+    border-radius: 50%;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: translate(-50%,-50%) scale(1); opacity: 0.6; }
+    50% { transform: translate(-50%,-50%) scale(1.1); opacity: 1; }
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: var(--glow-dim);
+    border: 1px solid rgba(255,92,207,0.35);
+    padding: 0.35rem 1rem;
+    border-radius: 100px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--glow);
+    margin-bottom: 2rem;
+    animation: fadeUp 0.8s ease both;
+  }
+  .hero-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--glow);
+    border-radius: 50%;
+    animation: blink 1.2s ease infinite;
+  }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+  .hero-title {
+    font-size: clamp(3.5rem, 9vw, 8rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  .hero-title .void-word {
+    display: block;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--glow) 50%, var(--glow2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 40px rgba(255,92,207,0.4));
+  }
+
+  .hero-sub {
+    font-size: 1.15rem;
+    color: var(--text-dim);
+    max-width: 520px;
+    line-height: 1.7;
+    margin-bottom: 3rem;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.85rem 2rem;
+    border-radius: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: none;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary {
+    background: var(--glow);
+    color: var(--void);
+    border: none;
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover { box-shadow: 0 0 40px rgba(255,92,207,0.45); transform: translateY(-2px); }
+  .btn-primary:hover::after { opacity: 0.1; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .btn-ghost:hover {
+    border-color: var(--glow);
+    color: var(--glow);
+    box-shadow: 0 0 20px rgba(255,92,207,0.18);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SCROLL indicator */
+  .scroll-hint {
+    position: absolute; bottom: 2.5rem; left: 50%;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    animation: fadeUp 1s 0.8s ease both;
+  }
+  .scroll-line {
+    width: 1px; height: 40px;
+    background: linear-gradient(to bottom, var(--glow), transparent);
+    animation: scrollLine 1.5s ease infinite;
+  }
+  @keyframes scrollLine {
+    0% { transform: scaleY(0); transform-origin: top; }
+    50% { transform: scaleY(1); transform-origin: top; }
+    51% { transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+
+  /* CODE PREVIEW */
+  .code-section {
+    padding: 6rem 2rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--glow);
+    margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .section-label::before {
+    content: '';
+    width: 2rem; height: 1px;
+    background: var(--glow);
+  }
+
+  .section-title {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+  }
+
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  .code-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .code-window {
+    background: var(--void2);
+    border: 1px solid rgba(255,92,207,0.18);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,92,207,0.06);
+    position: relative;
+  }
+
+  .code-window::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(168,85,247,0.09) 0%, rgba(255,92,207,0.03) 45%, transparent 75%);
+    pointer-events: none;
+  }
+
+  .code-bar {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.9rem 1.2rem;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid rgba(255,92,207,0.12);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff5f56; }
+  .dot-y { background: #ffbd2e; }
+  .dot-g { background: #27c93f; }
+  .code-filename {
+    margin-left: auto;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+
+  .code-body {
+    padding: 1.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.9;
+    overflow-x: auto;
+  }
+
+  .ln { color: rgba(255,255,255,0.15); user-select: none; margin-right: 1.2rem; }
+  .kw { color: var(--glow); }
+  .kw2 { color: var(--blue); }
+  .str { color: var(--yellow); }
+  .num { color: var(--red); }
+  .cmt { color: rgba(255,255,255,0.25); font-style: italic; }
+  .fn { color: var(--accent); }
+  .op { color: var(--text-dim); }
+
+  /* FEATURES */
+  .features-section {
+    padding: 6rem 2rem;
+    position: relative; z-index: 2;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 4rem;
+  }
+
+  .feature-card {
+    background: var(--void2);
+    border: 1px solid rgba(255,92,207,0.1);
+    border-radius: 12px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    cursor: none;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--glow), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .feature-card:hover {
+    border-color: rgba(255,92,207,0.32);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45), 0 0 40px rgba(255,92,207,0.08);
+  }
+  .feature-card:hover::before { opacity: 1; }
+
+  .feature-icon {
+    font-size: 2rem;
+    margin-bottom: 1.2rem;
+    display: block;
+    filter: grayscale(0.3);
+  }
+
+  .feature-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+  }
+
+  .feature-desc {
+    font-size: 0.88rem;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+
+  /* MODULES showcase */
+  .modules-section {
+    padding: 6rem 2rem;
+    position: relative; z-index: 2;
+    background: linear-gradient(to bottom, transparent, var(--void2) 20%, var(--void2) 80%, transparent);
+  }
+
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-top: 3rem;
+  }
+
+  .module-pill {
+    background: var(--void3);
+    border: 1px solid rgba(255,92,207,0.12);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    display: flex; align-items: center; gap: 0.75rem;
+    transition: all 0.2s;
+    cursor: none;
+  }
+  .module-pill:hover {
+    border-color: var(--glow);
+    background: var(--glow-dim);
+    transform: translateX(4px);
+  }
+
+  .module-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--glow);
+    flex-shrink: 0;
+    box-shadow: 0 0 8px var(--glow);
+  }
+
+  .module-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--glow);
+  }
+
+  .module-maps {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    margin-left: auto;
+  }
+
+  /* SYNTAX SECTION */
+  .syntax-section {
+    padding: 6rem 2rem;
+    position: relative; z-index: 2;
+  }
+
+  .tab-bar {
+    display: flex; gap: 0.25rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid rgba(255,92,207,0.12);
+  }
+
+  .tab {
+    padding: 0.75rem 1.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    cursor: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--glow);
+    border-bottom-color: var(--glow);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* CTA */
+  .cta-section {
+    padding: 8rem 2rem;
+    text-align: center;
+    position: relative; z-index: 2;
+  }
+
+  .cta-box {
+    max-width: 700px;
+    margin: 0 auto;
+    background: var(--void2);
+    border: 1px solid rgba(255,92,207,0.24);
+    border-radius: 24px;
+    padding: 5rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-box::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at center, rgba(168,85,247,0.12) 0%, rgba(255,92,207,0.05) 32%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .cta-title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+    line-height: 1.15;
+  }
+
+  .cta-sub {
+    color: var(--text-dim);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+  }
+
+  .install-box {
+    display: flex; align-items: center; gap: 1rem;
+    background: var(--void3);
+    border: 1px solid rgba(255,92,207,0.22);
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+  }
+
+  .install-box code {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--glow);
+    flex: 1;
+  }
+
+  .copy-btn {
+    background: var(--glow-dim);
+    border: 1px solid rgba(255,92,207,0.32);
+    color: var(--glow);
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    cursor: none;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { background: rgba(255,92,207,0.2); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid rgba(255,92,207,0.1);
+    padding: 3rem 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative; z-index: 2;
+  }
+
+  .footer-logo {
+    font-family: 'Space Mono', monospace;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+
+  .footer-logo strong { color: var(--glow); }
+
+  .footer-links { display: flex; gap: 2rem; }
+  .footer-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--glow); }
+
+  /* Reveal animation */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Floating particles */
+  .particle {
+    position: fixed;
+    width: 4px; height: 4px;
+    background: var(--glow);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    animation: float linear infinite;
+  }
+
+  @keyframes float {
+    0% { opacity: 0; transform: translateY(100vh) translateX(0); }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.3; }
+    100% { opacity: 0; transform: translateY(-100px) translateX(20px); }
+  }
+
+  @media (max-width: 900px) {
+    nav { padding: 1rem 2rem; }
+    .nav-links { display: none; }
+    .code-split { grid-template-columns: 1fr; }
+    .features-grid { grid-template-columns: 1fr 1fr; }
+    .modules-grid { grid-template-columns: 1fr 1fr; }
+    footer { flex-direction: column; gap: 1.5rem; text-align: center; }
+  }
+
+  @media (max-width: 600px) {
+    .features-grid { grid-template-columns: 1fr; }
+    .modules-grid { grid-template-columns: 1fr; }
+    .cta-box { padding: 3rem 1.5rem; }
+    .install-box { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-trail" id="cursorTrail"></div>
+
+<!-- Floating particles -->
+<div id="particles"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Void<span>Script</span></a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#modules">Modules</a></li>
+    <li><a href="#syntax">Syntax</a></li>
+    <li><a href="#download" class="nav-cta">Download</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-orb"></div>
+
+  <div class="hero-badge">v0.1 — Early Access</div>
+
+  <h1 class="hero-title">
+    Code from
+    <span class="void-word">The Void.</span>
+  </h1>
+
+  <p class="hero-sub">
+    A clean, expressive scripting language with human syntax and zero boilerplate. Build games, apps, and tools the way you think.
+  </p>
+
+  <div class="hero-actions">
+    <a href="#download" class="btn btn-primary">
+      ↓ Download VoidScript
+    </a>
+    <a href="#syntax" class="btn btn-ghost">
+      View Syntax →
+    </a>
+  </div>
+
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    scroll
+  </div>
+</section>
+
+<!-- CODE PREVIEW -->
+<section class="code-section" id="features">
+  <div class="container">
+    <div class="code-split">
+      <div class="reveal">
+        <div class="section-label">See it in action</div>
+        <h2 class="section-title">Syntax that reads like plain English.</h2>
+        <p style="color:var(--text-dim);line-height:1.8;margin-bottom:2rem;font-size:0.95rem;">
+          No brackets, no semicolons, no boilerplate. Write what you mean and VoidScript handles the rest — full power with none of the ceremony.
+        </p>
+        <a href="#syntax" class="btn btn-ghost" style="display:inline-flex;">Explore all syntax →</a>
+      </div>
+
+      <div class="code-window reveal" style="transition-delay:0.15s">
+        <div class="code-bar">
+          <div class="dot dot-r"></div>
+          <div class="dot dot-y"></div>
+          <div class="dot dot-g"></div>
+          <span class="code-filename">hello.void</span>
+        </div>
+        <div class="code-body" id="typewriter">
+<pre><span class="cmt">[Import modules]</span>
+<span class="kw">Void.import</span> VGame
+<span class="kw">Void.import</span> Void.math
+<span class="kw">Void.import</span> Void.rand
+
+<span class="cmt">[Define variables]</span>
+<span class="kw2">name</span> <span class="op">:</span> <span class="kw">str</span> <span class="op">=</span> <span class="str">"VoidScript"</span>
+<span class="kw2">score</span> <span class="op">:</span> <span class="kw">int</span> <span class="op">=</span> <span class="num">0</span>
+
+<span class="cmt">[Create a window]</span>
+<span class="fn">Void.window.create</span><span class="op">:</span> <span class="num">800</span><span class="op">,</span> <span class="num">600</span><span class="op">,</span> name
+
+<span class="cmt">[Draw shapes]</span>
+<span class="fn">Void.window.square</span><span class="op">:</span> <span class="num">80</span><span class="op">,</span> <span class="num">80</span><span class="op">,</span> <span class="str">"player"</span><span class="op">,</span> <span class="num">100</span><span class="op">,</span> <span class="num">200</span>
+
+<span class="cmt">[Random bonus]</span>
+<span class="fn">Void.rand.int</span><span class="op">:</span> <span class="num">10</span><span class="op">,</span> <span class="num">50</span>
+<span class="kw2">bonus</span> <span class="op">:</span> <span class="kw">int</span> <span class="op">=</span> __last__
+<span class="fn">Void.say</span><span class="op">:</span> bonus</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Why VoidScript</div>
+      <h2 class="section-title">Everything you need.<br>Nothing you don't.</h2>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card reveal" style="transition-delay:0.05s">
+        <span class="feature-icon">⚡</span>
+        <div class="feature-title">Lightning Fast</div>
+        <p class="feature-desc">Compiles and runs instantly. No heavy setup, no waiting — just write your <code style="color:var(--glow);font-family:'Space Mono',monospace">.void</code> file and go.</p>
+      </div>
+      <div class="feature-card reveal" style="transition-delay:0.1s">
+        <span class="feature-icon">🎮</span>
+        <div class="feature-title">Game Ready</div>
+        <p class="feature-desc">VGame (Pygame) built in. Create windows, draw shapes, handle buttons and images without setup.</p>
+      </div>
+      <div class="feature-card reveal" style="transition-delay:0.15s">
+        <span class="feature-icon">🔊</span>
+        <div class="feature-title">Audio Support</div>
+        <p class="feature-desc">Play, pause, loop, and control volume of sound effects and background music with one-liners.</p>
+      </div>
+      <div class="feature-card reveal" style="transition-delay:0.2s">
+        <span class="feature-icon">📦</span>
+        <div class="feature-title">20+ Modules</div>
+        <p class="feature-desc">Math, randomness, networking, databases, images, hashing, CSV, zip, and more. All with Void syntax.</p>
+      </div>
+      <div class="feature-card reveal" style="transition-delay:0.25s">
+        <span class="feature-icon">🧩</span>
+        <div class="feature-title">Clean Control Flow</div>
+        <p class="feature-desc">if, elif, else, while, do-while, repeat, repeat.over, repeat.range — all readable, all consistent.</p>
+      </div>
+      <div class="feature-card reveal" style="transition-delay:0.3s">
+        <span class="feature-icon">🧪</span>
+        <div class="feature-title">Built-in Testing</div>
+        <p class="feature-desc">Void.test gives you assertions, type checks, and pass/fail reporting right in your script.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULES -->
+<section class="modules-section" id="modules">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Module System</div>
+      <h2 class="section-title">Import only what you need.</h2>
+      <p style="color:var(--text-dim);max-width:500px;line-height:1.8;margin-top:1rem;font-size:0.95rem;">
+        Every module is purpose-built for VoidScript. Clean names, consistent syntax, and everything you need to build real software.
+      </p>
+    </div>
+
+    <div class="modules-grid" id="moduleGrid">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- SYNTAX TABS -->
+<section class="syntax-section" id="syntax">
+  <div class="container">
+    <div class="reveal">
+      <div class="section-label">Language Reference</div>
+      <h2 class="section-title">The full syntax, at a glance.</h2>
+    </div>
+
+    <div style="margin-top:3rem;" class="reveal" style="transition-delay:0.1s">
+      <div class="tab-bar">
+        <button class="tab active" onclick="switchTab('variables')">Variables</button>
+        <button class="tab" onclick="switchTab('control')">Control Flow</button>
+        <button class="tab" onclick="switchTab('functions')">Functions</button>
+        <button class="tab" onclick="switchTab('graphics')">Graphics</button>
+        <button class="tab" onclick="switchTab('audio')">Audio</button>
+      </div>
+
+      <div class="code-window" style="border-radius:0 12px 12px 12px;">
+        <div class="code-bar">
+          <div class="dot dot-r"></div>
+          <div class="dot dot-y"></div>
+          <div class="dot dot-g"></div>
+          <span class="code-filename" id="tabFilename">variables.void</span>
+        </div>
+        <div class="code-body" id="syntaxDisplay"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA / DOWNLOAD -->
+<section class="cta-section" id="download">
+  <div class="container">
+    <div class="cta-box reveal">
+      <h2 class="cta-title">Start building from<br>the void.</h2>
+      <p class="cta-sub">Run the installer, write your first <code style="color:var(--glow);font-family:'Space Mono',monospace">.void</code> file, and you're off. No config, no nonsense.</p>
+
+      <div class="install-box">
+        <code>Run the installer, then: voidscript yourscript.void</code>
+        <button class="copy-btn" onclick="copyInstall(this)">copy</button>
+      </div>
+
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <a href="#" class="btn btn-primary" onclick="downloadScript(event)">↓ Download Installer</a>
+        <a href="#features" class="btn btn-ghost">Read the docs →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <strong>VoidScript</strong> — Code from the void.
+  </div>
+  <div class="footer-links">
+    <a href="#features">Features</a>
+    <a href="#modules">Modules</a>
+    <a href="#syntax">Syntax</a>
+    <a href="#download">Download</a>
+  </div>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const trail = document.getElementById('cursorTrail');
+  let mx = 0, my = 0, tx = 0, ty = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx - 6 + 'px';
+    cursor.style.top = my - 6 + 'px';
+  });
+
+  function animateTrail() {
+    tx += (mx - tx) * 0.12;
+    ty += (my - ty) * 0.12;
+    trail.style.left = tx - 16 + 'px';
+    trail.style.top = ty - 16 + 'px';
+    requestAnimationFrame(animateTrail);
+  }
+  animateTrail();
+
+  document.querySelectorAll('a, button, .feature-card, .module-pill').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.transform = 'scale(2)';
+      trail.style.transform = 'scale(1.5)';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.transform = 'scale(1)';
+      trail.style.transform = 'scale(1)';
+    });
+  });
+
+  // Particles
+  const particleContainer = document.getElementById('particles');
+  for (let i = 0; i < 15; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.animationDuration = (8 + Math.random() * 15) + 's';
+    p.style.animationDelay = (Math.random() * 15) + 's';
+    p.style.opacity = Math.random() * 0.5;
+    particleContainer.appendChild(p);
+  }
+
+  // Reveal on scroll
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  reveals.forEach(r => observer.observe(r));
+
+  // Modules data
+  const modules = [
+    { name: 'Void.math', maps: 'math & trig' },
+    { name: 'Void.rand', maps: 'randomness' },
+    { name: 'Void.time', maps: 'time' },
+    { name: 'Void.path', maps: 'file paths' },
+    { name: 'Void.log', maps: 'logging' },
+    { name: 'Void.regex', maps: 're' },
+    { name: 'Void.color', maps: 'colors' },
+    { name: 'Void.db', maps: 'database' },
+    { name: 'Void.net', maps: 'networking' },
+    { name: 'Void.zip', maps: 'archives' },
+    { name: 'Void.hash', maps: 'hashing' },
+    { name: 'Void.csv', maps: 'csv' },
+    { name: 'Void.image', maps: 'images' },
+    { name: 'Void.env', maps: 'environment' },
+    { name: 'Void.shell', maps: 'shell cmds' },
+    { name: 'Void.clip', maps: 'clipboard' },
+    { name: 'Void.encode', maps: 'base64+' },
+    { name: 'Void.test', maps: 'testing' },
+    { name: 'VGame', maps: 'game engine' },
+    { name: 'Vkinter', maps: 'UI toolkit' },
+    { name: 'json', maps: 'data format' },
+    { name: 'Void.Os', maps: 'system ops' },
+  ];
+
+  const grid = document.getElementById('moduleGrid');
+  modules.forEach((m, i) => {
+    const pill = document.createElement('div');
+    pill.className = 'module-pill reveal';
+    pill.style.transitionDelay = (i * 0.03) + 's';
+    pill.innerHTML = `
+      <div class="module-dot"></div>
+      <span class="module-name">${m.name}</span>
+      <span class="module-maps">${m.maps}</span>
+    `;
+    grid.appendChild(pill);
+    observer.observe(pill);
+  });
+
+  // Syntax tabs
+  const syntaxContent = {
+    variables: {
+      file: 'variables.void',
+      code: `<span class="cmt">[Typed variable declaration]</span>
+<span class="kw2">name</span>  <span class="op">:</span> <span class="kw">str</span>   <span class="op">=</span> <span class="str">"VoidScript"</span>
+<span class="kw2">score</span> <span class="op">:</span> <span class="kw">int</span>   <span class="op">=</span> <span class="num">42</span>
+<span class="kw2">ratio</span> <span class="op">:</span> <span class="kw">float</span> <span class="op">=</span> <span class="num">3.14</span>
+<span class="kw2">alive</span> <span class="op">:</span> <span class="kw">bool</span>  <span class="op">=</span> <span class="kw">T</span>
+<span class="kw2">items</span> <span class="op">:</span> <span class="kw">list</span>  <span class="op">=</span> <span class="op">[</span><span class="str">"sword"</span><span class="op">,</span> <span class="str">"shield"</span><span class="op">,</span> <span class="str">"potion"</span><span class="op">]</span>
+
+<span class="cmt">[Resource declarations]</span>
+<span class="kw2">bg</span>    <span class="op">:</span> <span class="kw">pic</span>   <span class="str">"assets/bg.png"</span>
+<span class="kw2">theme</span> <span class="op">:</span> <span class="kw">audio</span> <span class="str">"sounds/theme.wav"</span>
+<span class="kw2">myFont</span><span class="op">:</span> <span class="kw">font</span>  <span class="str">"fonts/mono.ttf"</span>
+
+<span class="cmt">[Print a value]</span>
+<span class="fn">Void.say</span><span class="op">:</span> name
+<span class="fn">Void.say</span><span class="op">:</span> <span class="str">"Score is"</span>
+<span class="fn">Void.say</span><span class="op">:</span> score`
+    },
+    control: {
+      file: 'control.void',
+      code: `<span class="cmt">[If / elif / else]</span>
+<span class="kw">Void.if</span><span class="op">:</span> score <span class="op">></span> <span class="num">100</span> <span class="op">[</span>
+    <span class="fn">Void.say</span><span class="op">:</span> <span class="str">"High score!"</span>
+<span class="op">]</span>
+<span class="kw">Void.elif</span><span class="op">:</span> score <span class="op">></span> <span class="num">50</span> <span class="op">[</span>
+    <span class="fn">Void.say</span><span class="op">:</span> <span class="str">"Getting there"</span>
+<span class="op">]</span>
+<span class="kw">Void.else</span><span class="op">: [</span>
+    <span class="fn">Void.say</span><span class="op">:</span> <span class="str">"Keep going"</span>
+<span class="op">]</span>
+
+<span class="cmt">[While loop]</span>
+<span class="kw2">x</span> <span class="op">:</span> <span class="kw">int</span> <span class="op">=</span> <span class="num">5</span>
+<span class="kw">Void.while</span><span class="op">:</span> x <span class="op">></span> <span class="num">0</span> <span class="op">[</span>
+    <span class="fn">Void.say</span><span class="op">:</span> x
+    <span class="kw2">x</span> <span class="op">:</span> <span class="kw">int</span> <span class="op">=</span> x <span class="op">-</span> <span class="num">1</span>
+<span class="op">]</span>
+
+<span class="cmt">[Repeat fixed times]</span>
+<span class="kw">Void.repeat</span><span class="op">:</span> <span class="num">3</span> <span class="op">[</span>
+    <span class="fn">Void.say</span><span class="op">:</span> <span class="str">"Hello!"</span>
+<span class="op">]</span>
+
+<span class="cmt">[Iterate a list]</span>
+<span class="kw">Void.repeat.over</span><span class="op">:</span> item <span class="kw">in</span> items <span class="op">[</span>
+    <span class="fn">Void.say</span><span class="op">:</span> item
+<span class="op">]</span>
+
+<span class="cmt">[Range loop]</span>
+<span class="kw">Void.repeat.range</span><span class="op">:</span> <span class="num">0</span><span class="op">,</span> <span class="num">10</span> <span class="op">[</span>
+    <span class="fn">Void.say</span><span class="op">:</span> <span class="str">"tick"</span>
+<span class="op">]</span>`
+    },
+    functions: {
+      file: 'functions.void',
+      code: `<span class="cmt">[Define a function]</span>
+<span class="fn">greet</span> <span class="op">:</span> <span class="kw">func</span> <span class="str">"greet"</span><span class="op">(</span>playerName<span class="op">):</span>
+    <span class="fn">Void.say</span><span class="op">:</span> <span class="str">"Welcome"</span>
+    <span class="fn">Void.say</span><span class="op">:</span> playerName
+
+<span class="cmt">[Call a function]</span>
+<span class="fn">void.greet</span><span class="op">(</span><span class="str">"Hero"</span><span class="op">)</span>
+
+<span class="cmt">[Function with multiple params]</span>
+<span class="fn">addScore</span> <span class="op">:</span> <span class="kw">func</span> <span class="str">"addScore"</span><span class="op">(</span>base<span class="op">,</span> bonus<span class="op">):</span>
+    <span class="kw2">total</span> <span class="op">:</span> <span class="kw">int</span> <span class="op">=</span> base <span class="op">+</span> bonus
+    <span class="fn">Void.say</span><span class="op">:</span> total
+
+<span class="fn">void.addScore</span><span class="op">(</span><span class="num">50</span><span class="op">,</span> <span class="num">25</span><span class="op">)</span>
+
+<span class="cmt">[Module return values via __last__]</span>
+<span class="fn">Void.math.sqrt</span><span class="op">:</span> <span class="num">144</span>
+<span class="kw2">root</span> <span class="op">:</span> <span class="kw">float</span> <span class="op">=</span> __last__
+<span class="fn">Void.say</span><span class="op">:</span> root`
+    },
+    graphics: {
+      file: 'graphics.void',
+      code: `<span class="kw">Void.import</span> VGame
+
+<span class="cmt">[Create window]</span>
+<span class="fn">Void.window.create</span><span class="op">:</span> <span class="num">800</span><span class="op">,</span> <span class="num">600</span><span class="op">,</span> <span class="str">"My Game"</span>
+
+<span class="cmt">[Draw shapes]</span>
+<span class="fn">Void.window.square</span><span class="op">:</span>   <span class="num">80</span><span class="op">,</span> <span class="num">80</span><span class="op">,</span> <span class="str">"player"</span><span class="op">,</span> <span class="num">100</span><span class="op">,</span> <span class="num">200</span>
+<span class="fn">Void.window.circle</span><span class="op">:</span>   <span class="num">40</span><span class="op">,</span> <span class="num">40</span><span class="op">,</span> <span class="str">"ball"</span><span class="op">,</span>   <span class="num">400</span><span class="op">,</span> <span class="num">300</span>
+<span class="fn">Void.window.triangle</span><span class="op">:</span> <span class="num">60</span><span class="op">,</span> <span class="num">60</span><span class="op">,</span> <span class="str">"arrow"</span><span class="op">,</span>  <span class="num">200</span><span class="op">,</span> <span class="num">100</span>
+
+<span class="cmt">[Load and display an image]</span>
+<span class="kw2">bg</span> <span class="op">:</span> <span class="kw">pic</span> <span class="str">"assets/bg.png"</span>
+<span class="fn">Void.window.load.pic</span><span class="op">:</span> bg<span class="op">,</span> <span class="num">800</span><span class="op">,</span> <span class="num">600</span><span class="op">,</span> <span class="str">"background"</span><span class="op">,</span> <span class="num">0</span><span class="op">,</span> <span class="num">0</span>
+
+<span class="cmt">[Add a clickable button]</span>
+<span class="fn">Void.window.button</span><span class="op">:</span> <span class="num">120</span><span class="op">,</span> <span class="num">40</span><span class="op">,</span> <span class="str">"Start"</span><span class="op">,</span> <span class="num">340</span><span class="op">,</span> <span class="num">500</span><span class="op">,</span> <span class="kw">T</span>
+
+<span class="cmt">[Load a font]</span>
+<span class="kw2">myFont</span> <span class="op">:</span> <span class="kw">font</span> <span class="str">"fonts/pixel.ttf"</span>
+<span class="fn">Void.window.load.font</span><span class="op">:</span> myFont`
+    },
+    audio: {
+      file: 'audio.void',
+      code: `<span class="kw">Void.import</span> VGame
+
+<span class="cmt">[Declare audio resources]</span>
+<span class="kw2">jump</span>  <span class="op">:</span> <span class="kw">audio</span> <span class="str">"sounds/jump.wav"</span>
+<span class="kw2">theme</span> <span class="op">:</span> <span class="kw">music</span> <span class="str">"sounds/theme.mp3"</span>
+
+<span class="cmt">[Sound effects]</span>
+<span class="fn">Void.sound.audio.play</span><span class="op">:</span>   jump
+<span class="fn">Void.sound.audio.pause</span><span class="op">:</span>  jump
+<span class="fn">Void.sound.audio.resume</span><span class="op">:</span> jump
+<span class="fn">Void.sound.audio.stop</span><span class="op">:</span>   jump
+<span class="fn">Void.sound.audio.loop</span><span class="op">:</span>   jump
+<span class="fn">Void.sound.audio.volume</span><span class="op">:</span> jump<span class="op">,</span> <span class="num">0.8</span>
+
+<span class="cmt">[Background music]</span>
+<span class="fn">Void.sound.music.play</span><span class="op">:</span>   theme
+<span class="fn">Void.sound.music.loop</span><span class="op">:</span>   theme
+<span class="fn">Void.sound.music.volume</span><span class="op">:</span> theme<span class="op">,</span> <span class="num">0.5</span>
+<span class="fn">Void.sound.music.pause</span><span class="op">:</span>  theme
+<span class="fn">Void.sound.music.resume</span><span class="op">:</span> theme
+<span class="fn">Void.sound.music.fade</span><span class="op">:</span>   theme<span class="op">,</span> <span class="num">3</span>`
+    }
+  };
+
+  function switchTab(key) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      const keys = ['variables','control','functions','graphics','audio'];
+      t.classList.toggle('active', keys[i] === key);
+    });
+    const d = syntaxContent[key];
+    document.getElementById('tabFilename').textContent = d.file;
+    document.getElementById('syntaxDisplay').innerHTML = `<pre>${d.code}</pre>`;
+  }
+
+  // Init first tab
+  switchTab('variables');
+
+  // Copy install command
+  function copyInstall(btn) {
+    navigator.clipboard.writeText('voidscript yourscript.void');
+    btn.textContent = 'copied!';
+    btn.style.color = 'var(--glow)';
+    setTimeout(() => { btn.textContent = 'copy'; btn.style.color = ''; }, 2000);
+  }
+
+  // Download the packaged release zip
+  function downloadScript(e) {
+    e.preventDefault();
+    const a = document.createElement('a');
+    a.href = 'https://github.com/VoidScript-Lang/VoidScript/releases/download/untagged-439a27f6284b903beb6a/VoidScript.-.v0.1.zip';
+    a.download = 'VoidScript.-.v0.1.zip';
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+</script>
+</body>
+</html>
