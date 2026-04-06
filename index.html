@@ -213,7 +213,7 @@
 
   .hero-actions {
     display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
-    animation: fadeUp 0.8s 0.3s ease both;
+    animation: fadeUp 0.8s 0.3s ease both; 
   }
 
   .btn {
@@ -776,7 +776,7 @@
       <div class="feature-card reveal" style="transition-delay:0.1s">
         <span class="feature-icon">🎮</span>
         <div class="feature-title">Game Ready</div>
-        <p class="feature-desc">VGame (Pygame) built in. Create windows, draw shapes, handle buttons and images without setup.</p>
+        <p class="feature-desc">VGame (Pygame) built-in. Create windows, draw shapes, handle buttons and images without setup.</p>
       </div>
       <div class="feature-card reveal" style="transition-delay:0.15s">
         <span class="feature-icon">🔊</span>
@@ -834,6 +834,7 @@
         <button class="tab" onclick="switchTab('functions')">Functions</button>
         <button class="tab" onclick="switchTab('graphics')">Graphics</button>
         <button class="tab" onclick="switchTab('audio')">Audio</button>
+        <button class="tab" onclick="switchTab('filekeys')">File & Keys</button>
       </div>
 
       <div class="code-window" style="border-radius:0 12px 12px 12px;">
@@ -1097,12 +1098,41 @@
 <span class="fn">Void.sound.music.pause</span><span class="op">:</span>  theme
 <span class="fn">Void.sound.music.resume</span><span class="op">:</span> theme
 <span class="fn">Void.sound.music.fade</span><span class="op">:</span>   theme<span class="op">,</span> <span class="num">3</span>`
+    },
+    filekeys: {
+      file: 'filekeys.void',
+      code: `<span class="cmt">[Import JSON]</span>
+<span class="kw">Void.import</span> json
+
+<span class="kw2">score</span> <span class="op">:</span> <span class="kw">int</span> <span class="op">=</span> <span class="num">42</span>
+<span class="kw2">player</span> <span class="op">:</span> <span class="kw">str</span> <span class="op">=</span> <span class="str">"Hero"</span>
+<span class="kw2">items</span> <span class="op">:</span> <span class="kw">list</span> <span class="op">=</span> <span class="op">[</span><span class="str">"sword"</span><span class="op">,</span> <span class="str">"potion"</span><span class="op">]</span>
+
+<span class="cmt">[Create and save JSON]</span>
+<span class="fn">Void.File.Create</span><span class="op">:</span> <span class="str">"save.json"</span><span class="op">,</span> <span class="str">"score,player,items"</span>
+<span class="fn">Void.File.Save</span><span class="op">:</span> <span class="str">"save.json"</span><span class="op">,</span> <span class="str">"score"</span>
+
+<span class="cmt">[Load JSON]</span>
+<span class="fn">Void.File.Load</span><span class="op">:</span> <span class="str">"save.json"</span><span class="op">,</span> <span class="str">"gameData"</span>
+<span class="fn">Void.say</span><span class="op">:</span> gameData.score
+<span class="fn">Void.say</span><span class="op">:</span> gameData.player
+
+<span class="cmt">[Key bindings - needs window]</span>
+<span class="kw">Void.import</span> Vkinter
+
+<span class="kw2">onKey</span> <span class="op">:</span> <span class="kw">func</span> <span class="str">"onKey"</span><span class="op">():</span>
+    <span class="fn">Void.say</span><span class="op">:</span> <span class="str">"Key pressed!"</span>
+
+<span class="fn">Void.KeyDown</span><span class="op">:</span> <span class="str">"space"</span><span class="op">,</span> <span class="str">"onKey"</span>
+<span class="fn">Void.KeyDown</span><span class="op">:</span> <span class="str">"enter"</span><span class="op">,</span> <span class="str">"onKey"</span>
+
+<span class="fn">Void.window.create</span><span class="op">:</span> <span class="num">400</span><span class="op">,</span> <span class="num">300</span><span class="op">,</span> <span class="str">"Test Keys"</span>`
     }
   };
 
   function switchTab(key) {
     document.querySelectorAll('.tab').forEach((t, i) => {
-      const keys = ['variables','control','functions','graphics','audio'];
+      const keys = ['variables','control','functions','graphics','audio','filekeys'];
       t.classList.toggle('active', keys[i] === key);
     });
     const d = syntaxContent[key];
